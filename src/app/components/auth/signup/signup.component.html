@@ -33,7 +33,7 @@
     >
       Signup
     </button>
-    <div class="is-loading-spinner" *ngIf="isLoading">
+    <div class="is-loading-spinner" *ngIf="isLoading$ | async">
       <mat-spinner></mat-spinner>
     </div>
   </form>

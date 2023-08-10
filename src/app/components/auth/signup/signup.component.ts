@@ -1,11 +1,10 @@
-import {
-  ChangeDetectionStrategy,
-  ChangeDetectorRef,
-  Component,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { AuthService } from '@fe-app/services';
-import { finalize } from 'rxjs/operators';
+import { IAppState } from '@fe-app/models';
+import { authActions } from '@fe-auth-store/actions';
+import { isLoadingSelector } from '@fe-auth-store/selector';
+import { Store } from '@ngrx/store';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'signup',
@@ -14,7 +13,7 @@ import { finalize } from 'rxjs/operators';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SignupComponent {
-  isLoading = false;
+  isLoading$: Observable<boolean>;
   form = new FormGroup({
     email: new FormControl<string>('', [
       Validators.required,
@@ -27,25 +26,18 @@ export class SignupComponent {
     ]),
   });
 
-  constructor(
-    private _authService: AuthService,
-    private _cdr: ChangeDetectorRef
-  ) {}
+  constructor(private _store: Store<IAppState>) {
+    this.isLoading$ = this._store.select(isLoadingSelector);
+  }
 
   onSignup() {
     if (!this.form.valid) {
       return;
     }
-    this.isLoading = true;
     const { email, password } = this.form.controls;
-    this._authService
-      .createUser$(email.value, password.value)
-      .pipe(
-        finalize(() => {
-          this.isLoading = false;
-          this._cdr.markForCheck();
-        })
-      )
-      .subscribe();
+
+    this._store.dispatch(
+      authActions.signup({ email: email.value, password: password.value })
+    );
   }
 }

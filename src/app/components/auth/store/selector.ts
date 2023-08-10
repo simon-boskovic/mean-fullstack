@@ -12,3 +12,5 @@ export const errorSelector = createSelector(
   selectFeature,
   (state) => state.error
 );
+
+export const isAuth = createSelector(selectFeature, (state) => state.isAuth);

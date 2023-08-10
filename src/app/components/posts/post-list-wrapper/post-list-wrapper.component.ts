@@ -1,13 +1,14 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { isAuth } from '@fe-app/components/auth/store';
 import { IAppState, IPost } from '@fe-app/models';
-import { AuthService, PostService } from '@fe-app/services';
+import { PostService } from '@fe-app/services';
 import {
   errorSelector,
   isLoadingSelector,
   postSelector,
 } from '@fe-posts-store/selectors';
 import { Store } from '@ngrx/store';
-import { Observable } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 
 @Component({
   selector: 'post-list-wrapper',
@@ -23,12 +24,11 @@ export class PostListWrapperComponent {
   error$: Observable<string>;
 
   constructor(
-    private _authService: AuthService,
     private _store: Store<IAppState>,
     private _postService: PostService
   ) {
     this.isLoading$ = this._store.select(isLoadingSelector);
-    this.isAuth$ = this._authService.isAuth$;
+    this.isAuth$ = this._store.select(isAuth).pipe(tap(console.log));
     this.allPostsCount$ = this._postService.allPostsCount$;
     this.posts$ = this._store.select(postSelector);
     this.error$ = this._store.select(errorSelector);

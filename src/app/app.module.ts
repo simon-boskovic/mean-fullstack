@@ -8,6 +8,7 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { MatInputModule } from '@angular/material/input';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -57,6 +58,7 @@ import { StoreDevtoolsModule } from '@ngrx/store-devtools';
     MatDialogModule,
     HttpClientModule,
     MatPaginatorModule,
+    MatSnackBarModule,
     StoreModule.forRoot({ posts: postReducer, auth: authReducer }),
     EffectsModule.forRoot([PostEffects, AuthEffects]),
     StoreDevtoolsModule.instrument({

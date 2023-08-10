@@ -2,18 +2,22 @@ import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { IAuthData } from '@fe-app/models';
 import { ApiService } from '@fe-app/services';
-import { BehaviorSubject, Observable, tap } from 'rxjs';
+import { authActions } from '@fe-auth-store/actions';
+import { Store } from '@ngrx/store';
+import { Observable, tap } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
   private _token: string;
-  private _isAuth$ = new BehaviorSubject<boolean>(false);
   private _tokenTimer: number;
-  isAuth$ = this._isAuth$.asObservable();
 
-  constructor(private _apiService: ApiService, private _router: Router) {}
+  constructor(
+    private _apiService: ApiService,
+    private _router: Router,
+    private _store: Store
+  ) {}
 
   getToken(): string {
     return this._token;
@@ -42,7 +46,6 @@ export class AuthService {
           );
           this._saveAuthData(obj.token, expirationDate);
           this._token = obj.token;
-          this._isAuth$.next(true);
         })
       );
   }
@@ -50,6 +53,7 @@ export class AuthService {
   autoAuthUser() {
     const authInformation = this._getAuthData();
     if (!authInformation) {
+      this._store.dispatch(authActions.autoAuthUserFailed());
       return;
     }
 
@@ -57,14 +61,19 @@ export class AuthService {
     const expiresIn = authInformation.expirationDate.getTime() - now.getTime();
     if (expiresIn > 0) {
       this._token = authInformation.token;
-      this._isAuth$.next(true);
-      this._setAuthTimer(expiresIn / 1000);
+      const expirationTime = expiresIn / 1000;
+      this._store.dispatch(
+        authActions.autoAuthUserSuccess({
+          expiresIn: expirationTime,
+          token: this._token,
+        })
+      );
+      this._setAuthTimer(expirationTime);
     }
   }
 
   logout() {
     this._token = null;
-    this._isAuth$.next(false);
     this._router.navigate(['/']);
     this._clearAuthData();
     clearTimeout(this._tokenTimer);

@@ -32,14 +32,16 @@ router.post("/login", (req, res, next) => {
   User.findOne({ email: req.body.email })
     .then((user) => {
       if (!user) {
-        return res.status(401).json({ message: "Auth failed1" });
+        return res.status(401).json({ message: "Cannot find the user!" });
       }
       fetchedUserID = user._id;
       return bcrypt
         .compare(req.body.password, user.password)
         .then((passwordMatch) => {
           if (!passwordMatch) {
-            return res.status(401).json({ message: "Auth failed2" });
+            return res
+              .status(401)
+              .json({ message: "Invalid Password or Email" });
           }
           const token = jwt.sign(
             { email: req.body.email, userID: fetchedUserID },
@@ -52,7 +54,7 @@ router.post("/login", (req, res, next) => {
     })
     .catch((err) => {
       console.log(err);
-      return res.status(401).json({ message: "Auth failed3" });
+      return res.status(401).json({ message: "Unexpected error occured" });
     });
 });
 
