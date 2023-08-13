@@ -84,6 +84,20 @@ router.delete("/:id", checkAuth, (req, res, next) => {
   );
 });
 
+router.get("/:id", (req, res, next) => {
+  const id = req.params.id;
+  return Post.findById(id)
+    .then((post) => {
+      if (post) {
+        return res.json({ status: 200, post });
+      }
+      return res.status(404).json();
+    })
+    .catch(() => {
+      return res.status(404).json();
+    });
+});
+
 router.put(
   "/:id",
   checkAuth,
@@ -103,8 +117,7 @@ router.put(
     });
     Post.updateOne({ _id: req.params.id, creator: req.userData.userID }, post)
       .then((result) => {
-        console.log(result);
-        if (result.modifiedCount) {
+        if (result.matchedCount) {
           res.status(200).json({
             id: post._id,
             imagePath: post.imagePath,

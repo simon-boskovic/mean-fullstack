@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  OnDestroy,
   OnInit,
 } from '@angular/core';
 import {
@@ -10,11 +11,13 @@ import {
   FormGroup,
   Validators,
 } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { ERouteParam } from '@fe-app/enums';
-import { IPost } from '@fe-app/models';
-import { PostService } from '@fe-app/services';
-import { Observable, Observer, of, take, tap } from 'rxjs';
+import { IAppState, IPost } from '@fe-app/models';
+import { postsActions } from '@fe-posts-store/actions';
+import { isLoadingSelector, postByIDSelector } from '@fe-posts-store/selectors';
+import { Store } from '@ngrx/store';
+import { Observable, Observer, of, tap } from 'rxjs';
 
 export const mimeType = (
   control: AbstractControl
@@ -68,8 +71,9 @@ export const mimeType = (
   styleUrls: ['./post-create.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PostCreateComponent implements OnInit {
+export class PostCreateComponent implements OnInit, OnDestroy {
   post$: Observable<IPost>;
+  isLoading$: Observable<boolean>;
   postID: string;
   form = new FormGroup({
     title: new FormControl<string>('', [
@@ -88,25 +92,30 @@ export class PostCreateComponent implements OnInit {
   imagePreview: string | ArrayBuffer;
 
   constructor(
-    private _postService: PostService,
     private _activatedRoute: ActivatedRoute,
-    private _router: Router,
-    private _cdr: ChangeDetectorRef
-  ) {}
+    private _cdr: ChangeDetectorRef,
+    private _store: Store<IAppState>
+  ) {
+    this.isLoading$ = this._store.select(isLoadingSelector);
+  }
 
   ngOnInit() {
     this.postID = this._activatedRoute.snapshot.paramMap.get(
       ERouteParam.PostID
     );
-    this.post$ = this._postService.getPost$(this.postID).pipe(
-      tap((res) => {
-        this.form.setValue({
-          content: res?.content || '',
-          title: res?.title || '',
-          image: res?.imagePath || '',
-        });
-      })
-    );
+    if (this.postID) {
+      this._store.dispatch(postsActions.getPostByID({ ID: this.postID }));
+
+      this.post$ = this._store.select(postByIDSelector).pipe(
+        tap((res) => {
+          this.form.setValue({
+            content: res?.content || '',
+            title: res?.title || '',
+            image: res?.imagePath || '',
+          });
+        })
+      );
+    }
   }
 
   onFileSelect(files: FileList) {
@@ -131,18 +140,22 @@ export class PostCreateComponent implements OnInit {
 
     this.post$ = null;
 
-    const subscription$: Observable<IPost | string> = isUpdate
-      ? this._postService.updatePost$(
-          this.postID,
-          post.title,
-          post.content,
-          this.form.controls.image.value
-        )
-      : this._postService.addPost$(post, this.form.value.image as File);
+    this._store.dispatch(
+      isUpdate
+        ? postsActions.updatePost({
+            content: post.content,
+            id: this.postID,
+            image: this.form.controls.image.value,
+            title: post.title,
+          })
+        : postsActions.createPost({
+            post: post,
+            image: this.form.controls.image.value,
+          })
+    );
+  }
 
-    subscription$.pipe(take(1)).subscribe();
-
-    !isUpdate && this.form.reset();
-    this._router.navigate(['/']);
+  ngOnDestroy() {
+    this.form.reset();
   }
 }

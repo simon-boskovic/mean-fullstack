@@ -6,4 +6,6 @@ export interface IPostState {
   error: string | null;
   pageIndex: number;
   pageSize: number;
+  searchedPost: IPost;
+  maxPosts: number;
 }

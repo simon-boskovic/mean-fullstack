@@ -17,3 +17,12 @@ export const errorSelector = createSelector(
   selectFeature,
   (state) => state.error
 );
+
+export const postByIDSelector = createSelector(
+  selectFeature,
+  (state) => state.searchedPost
+);
+export const maxPostSelector = createSelector(
+  selectFeature,
+  (state) => state.maxPosts
+);

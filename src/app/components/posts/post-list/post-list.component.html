@@ -17,7 +17,15 @@
         </div>
         {{ post.content }}
         <mat-action-row *ngIf="isAuth">
-          <button color="primary" mat-button [routerLink]="['/edit', post.id]">
+          <button
+            color="primary"
+            mat-button
+            [routerLink]="['/edit', post.id]"
+            [queryParams]="{
+              pageIndex: pageIndex,
+              pageSize: pageSize
+            }"
+          >
             Edit
           </button>
           <button color="warn" mat-button (click)="onDelete(post.id)">
@@ -27,9 +35,11 @@
       </mat-expansion-panel>
     </ng-container>
   </mat-accordion>
+
   <mat-paginator
-    [length]="allPostsCount"
-    [pageSize]="postsPerPage"
+    [pageIndex]="pageIndex"
+    [pageSize]="pageSize"
+    [length]="maxCount"
     [pageSizeOptions]="pageSizeOptions"
     (page)="onChangePage($event)"
   ></mat-paginator>

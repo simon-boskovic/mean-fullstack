@@ -3,9 +3,10 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatDialog } from '@angular/material/dialog';
 import { IAppState } from '@fe-app/models';
 import { ErrorModalComponent } from '@fe-app/shared/components/modals';
+import { errorSelector as AuthErrorSelector } from '@fe-auth-store/selector';
+import { errorSelector as PostErrorSelector } from '@fe-posts-store/selectors';
 import { Store } from '@ngrx/store';
-import { filter, switchMap, take } from 'rxjs';
-import { errorSelector } from './auth/store';
+import { combineLatest, filter, map, switchMap, take } from 'rxjs';
 
 @Component({
   selector: 'app-root',
@@ -23,10 +24,18 @@ export class AppComponent {
   }
 
   private _initErrorModalSelector() {
-    this.store
-      .select(errorSelector)
+    combineLatest({
+      authError: this.store.select(AuthErrorSelector),
+      postError: this.store.select(PostErrorSelector),
+    })
       .pipe(
         takeUntilDestroyed(this.destroyRef),
+        map((errors) => {
+          return ''
+            .concat(errors.authError)
+            .concat(errors.postError)
+            .replaceAll('null', '');
+        }),
         filter((x) => !!x),
         switchMap((err) =>
           this.dialog
@@ -35,6 +44,6 @@ export class AppComponent {
             .pipe(take(1))
         )
       )
-      .subscribe({ complete: () => console.log('COMPLETE') });
+      .subscribe();
   }
 }

@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { isAuth } from '@fe-app/components/auth/store';
 import { IAppState, IPost } from '@fe-app/models';
-import { PostService } from '@fe-app/services';
 import {
   errorSelector,
   isLoadingSelector,
+  maxPostSelector,
   postSelector,
 } from '@fe-posts-store/selectors';
 import { Store } from '@ngrx/store';
@@ -18,19 +18,16 @@ import { Observable, tap } from 'rxjs';
 })
 export class PostListWrapperComponent {
   posts$: Observable<IPost[]>;
-  allPostsCount$: Observable<number>;
   isAuth$: Observable<boolean>;
   isLoading$: Observable<boolean>;
   error$: Observable<string>;
+  maxCount$: Observable<number>;
 
-  constructor(
-    private _store: Store<IAppState>,
-    private _postService: PostService
-  ) {
+  constructor(private _store: Store<IAppState>) {
     this.isLoading$ = this._store.select(isLoadingSelector);
     this.isAuth$ = this._store.select(isAuth).pipe(tap(console.log));
-    this.allPostsCount$ = this._postService.allPostsCount$;
     this.posts$ = this._store.select(postSelector);
     this.error$ = this._store.select(errorSelector);
+    this.maxCount$ = this._store.select(maxPostSelector);
   }
 }
